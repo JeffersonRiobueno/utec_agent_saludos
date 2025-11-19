@@ -1,13 +1,13 @@
 services:
-  agent_product:
+  agent_saludo:
     build: .
     restart: always
     env_file:
       - .env
-    ports:
-      - "8120:8000"
     volumes:
       - .:/app
+    ports:
+      - "8300:8000"
 
     networks:
     - cluster

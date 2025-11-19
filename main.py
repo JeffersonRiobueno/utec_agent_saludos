@@ -10,15 +10,18 @@ from langchain_openai import ChatOpenAI
 from langchain_community.chat_models import ChatOllama
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 
-from vector.vector import products_tool
-
 load_dotenv()
 
 SYSTEM_PROMPT = (
-    "Eres un asistente experto en buscar productos de la tienda de zapatos. "
-    "Ayudas a usuarios a responder preguntas sobre productos y encontrar información relevante. "
-    "Usas herramientas para buscar información relevante y responder consultas de usuarios. "
-    "Cuando tengas la respuesta, proporciona la información del producto y su stock si está disponible."
+    """Eres un agente especializado en saludos e interacciones iniciales.
+
+    Tu misión es responder de forma amable, clara y apropiada a preguntas relacionadas con saludos, presentaciones o conversaciones iniciales.
+
+    Responde brevemente y de manera natural.
+
+    Si no entiendes la pregunta, pide aclaración.
+
+    """
 )
 
 app = FastAPI()
@@ -31,13 +34,13 @@ DEFAULT_TEMPERATURE = float(os.getenv("MODEL_TEMPERATURE", "0.2"))
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")  # requerido si usas gemini
 
-class ProductAgentRequest(BaseModel):
+class GreetingAgentRequest(BaseModel):
     text: str
     provider: Optional[str] = DEFAULT_PROVIDER
     model: Optional[str] = DEFAULT_MODEL
     temperature: Optional[float] = DEFAULT_TEMPERATURE
 
-class ProductAgentResponse(BaseModel):
+class GreetingAgentResponse(BaseModel):
     result: str
 
 
@@ -69,11 +72,11 @@ def make_llm(
 
     raise ValueError(f"Proveedor LLM no soportado: {provider}. Usa: openai | ollama | gemini")
 
-@app.post("/products_agent_search", response_model=ProductAgentResponse)
-def products_agent_endpoint(req: ProductAgentRequest):
+@app.post("/greeting_agent", response_model=GreetingAgentResponse)
+def greeting_agent_endpoint(req: GreetingAgentRequest):
     
     llm = make_llm(req.provider, req.model, req.temperature)
-    tools = [products_tool]
+    tools = []
     prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
         ("human", "{input}"),
@@ -85,8 +88,8 @@ def products_agent_endpoint(req: ProductAgentRequest):
     result = executor.invoke({"input": req.text})
     # El resultado puede estar en diferentes campos según el modelo
     if isinstance(result, dict) and "output" in result:
-        return ProductAgentResponse(result=str(result["output"]))
-    return ProductAgentResponse(result=str(result))
+        return GreetingAgentResponse(result=str(result["output"]))
+    return GreetingAgentResponse(result=str(result))
 
 if __name__ == "__main__":
     import uvicorn
