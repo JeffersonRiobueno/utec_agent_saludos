@@ -36,6 +36,8 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")  # requerido si usas gemini
 
 class GreetingAgentRequest(BaseModel):
     text: str
+    session_id: Optional[str] = None
+    context_summary: Optional[str] = None
     provider: Optional[str] = DEFAULT_PROVIDER
     model: Optional[str] = DEFAULT_MODEL
     temperature: Optional[float] = DEFAULT_TEMPERATURE
@@ -74,18 +76,26 @@ def make_llm(
 
 @app.post("/greeting_agent", response_model=GreetingAgentResponse)
 def greeting_agent_endpoint(req: GreetingAgentRequest):
-    
+    print(f"[API] Greeting request: '{req.text}' (session_id: {req.session_id})")
+    if req.context_summary:
+        print(f"[API] Context summary received: {req.context_summary}")
+
     llm = make_llm(req.provider, req.model, req.temperature)
     tools = []
+
+    system_prompt = SYSTEM_PROMPT
+    if req.context_summary:
+        system_prompt = SYSTEM_PROMPT + "\n\nCONTEXT SUMMARY: " + req.context_summary
+
     prompt = ChatPromptTemplate.from_messages([
-        ("system", SYSTEM_PROMPT),
+        ("system", system_prompt),
         ("human", "{input}"),
         ("ai", "{agent_scratchpad}")
     ])
     agent = create_tool_calling_agent(llm, tools, prompt)
     executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
     # Ejecuta el agente de forma completamente automática
-    result = executor.invoke({"input": req.text})
+    result = executor.invoke({"input": req.text, "session_id": req.session_id, "context_summary": req.context_summary})
     # El resultado puede estar en diferentes campos según el modelo
     if isinstance(result, dict) and "output" in result:
         return GreetingAgentResponse(result=str(result["output"]))
