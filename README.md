@@ -1,6 +1,6 @@
 # 
 
-Agente de búsqueda de productos con RAG y clasificación automática por IA. Compatible con Gemini, OpenAI y Ollama.
+Agente de búsqueda de productos con RAG y clasificación automática por IA. Compatible con OpenAI (Gemini/Ollama eliminados).
 
 ---
 
@@ -28,12 +28,11 @@ Agente de búsqueda de productos con RAG y clasificación automática por IA. Co
    ```
 
 5. **Configura el archivo `.env` en `/`**  
-   - Usa `EMBEDDINGS_PROVIDER=ollama` y `OLLAMA_MODEL=nomic-embed-text` para embeddings locales.
-   - Usa `LLM_PROVIDER=gemini` para clasificación con Gemini.
+   - Usa `EMBEDDINGS_PROVIDER=openai` para embeddings con OpenAI.
 
 6. **Asegúrate de tener el modelo de embeddings en Ollama:**
    ```
-   ollama pull nomic-embed-text
+   (Ollama ya no es requerido; use OpenAI)
    ```
 
 7. **Ingesta productos en Qdrant:**
@@ -83,8 +82,8 @@ Agente de búsqueda de productos con RAG y clasificación automática por IA. Co
 
 - **Qdrant version mismatch:**  
   Si ves un error de incompatibilidad de versiones, asegúrate de que Qdrant esté en la versión 1.15.1 (`docker-compose-qdrant.yml` ya lo especifica).
-- **Ollama model not found:**  
-  Si ves un error de modelo no encontrado, ejecuta `ollama pull nomic-embed-text`.
+-- **Embedding model not found:**  
+   Si ves un error de modelo no encontrado, verifica la configuración de `OPENAI_API_KEY` y las dependencias.
 - **DeprecationWarning de embeddings:**  
   Es solo un warning, puedes ignorarlo hasta actualizar todos los paquetes langchain.
 
